@@ -1,5 +1,7 @@
-import {updateCharts} from './paper-charts.mjs?v=freeze1';
-import {holdModel,pnlModel,entryDelay,formatDuration,formatUTC,formatSOL,formatPercent,safeLinks,selectPositions,countModel} from './paper-table-model.mjs?v=freeze1';
+import {createTradeCountsLoader} from './paper-trade-counts.mjs?v=chart4v1';
+const loadTradeCounts=createTradeCountsLoader();
+import {updateCharts} from './paper-charts.mjs?v=chart4v1';
+import {holdModel,pnlModel,entryDelay,formatDuration,formatUTC,formatSOL,formatPercent,safeLinks,selectPositions,countModel} from './paper-table-model.mjs?v=chart4v1';
 const feed='https://raw.githubusercontent.com/RamonHitramon/mcap-call-report-2026-10-25/refs/heads/paper-feed/live-paper.json';
 const $=id=>document.getElementById(id);
 const sol=v=>Number(v).toFixed(6)+' SOL';
@@ -47,5 +49,5 @@ export function renderTrades(s){
   row.append(cell,percent);body.append(row);
  }
 }
-async function refresh(){if(busy)return;busy=true;$('refresh').disabled=true;try{const r=await fetch(feed+'?v='+Math.floor(Date.now()/60000),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const s=await r.json();if(s.mode!=='PAPER_ONLY'||!Array.isArray(s.wallets))throw Error('Неверный формат снимка');state=s;$('error').textContent=s.data_quality?.legacy_quote_outages?'⚠ Earlier quote gaps: results are provisional, not a clean strategy comparison.':'';render();}catch(e){$('error').textContent='Не удалось получить свежий снимок: '+e.message;if(state)render();}finally{busy=false;$('refresh').disabled=false;}}
+async function refresh(){if(busy)return;busy=true;$('refresh').disabled=true;try{const r=await fetch(feed+'?v='+Math.floor(Date.now()/60000),{cache:'no-store'});if(!r.ok)throw Error('HTTP '+r.status);const s=await r.json();if(s.mode!=='PAPER_ONLY'||!Array.isArray(s.wallets))throw Error('Неверный формат снимка');state=await loadTradeCounts(s);$('error').textContent=s.data_quality?.legacy_quote_outages?'⚠ Earlier quote gaps: results are provisional, not a clean strategy comparison.':'';render();}catch(e){$('error').textContent='Не удалось получить свежий снимок: '+e.message;if(state)render();}finally{busy=false;$('refresh').disabled=false;}}
 $('refresh').addEventListener('click',refresh);for(const id of ['filter','status-filter','sort'])$(id).addEventListener('change',()=>state&&renderTrades(state));refresh();setInterval(refresh,60000);
