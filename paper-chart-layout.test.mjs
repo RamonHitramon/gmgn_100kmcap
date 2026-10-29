@@ -14,7 +14,7 @@ test('four plots keep identical geometry, distinct step count lines, integer too
  root.children[1].children[0].onclick();assert.equal(all(root.children[2].children[3]).filter(n=>n.tag==='path').length,0);
  }finally{globalThis.document=old}
 });
-test('layout stays one column with responsive bounded SVG and natural synchronized header sizing',async()=>{
+test('layout stays compact two columns with responsive bounded SVG and natural synchronized header sizing',async()=>{
  const html=await readFile(new URL('./index.html',import.meta.url),'utf8'),source=await readFile(new URL('./paper-charts.mjs',import.meta.url),'utf8');
- assert.match(html,/\.chart-grid\{[^}]*grid-template-columns:minmax\(0,1fr\)/);assert.match(html,/\.chart-header\{[^}]*min-height:var\(--chart-header-height/);assert.match(source,/ResizeObserver/);assert.match(source,/getBoundingClientRect/);
+ assert.match(html,/\.chart-grid\{[^}]*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);assert.match(html,/\.chart-header\{[^}]*min-height:var\(--chart-header-height/);assert.match(source,/notes.append/);assert.match(source,/root.append\(plots,notes/);assert.match(source,/ResizeObserver/);assert.match(source,/getBoundingClientRect/);
 });

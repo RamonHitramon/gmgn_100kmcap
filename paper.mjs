@@ -1,7 +1,7 @@
-import {createTradeCountsLoader} from './paper-trade-counts.mjs?v=chart4v1';
+import {createTradeCountsLoader} from './paper-trade-counts.mjs?v=compact4v1';
 const loadTradeCounts=createTradeCountsLoader();
-import {updateCharts} from './paper-charts.mjs?v=chart4v1';
-import {holdModel,pnlModel,entryDelay,formatDuration,formatUTC,formatSOL,formatPercent,safeLinks,selectPositions,countModel} from './paper-table-model.mjs?v=chart4v1';
+import {updateCharts} from './paper-charts.mjs?v=compact4v1';
+import {holdModel,pnlModel,entryDelay,formatDuration,formatUTC,formatSOL,formatPercent,safeLinks,selectPositions,countModel} from './paper-table-model.mjs?v=compact4v1';
 const feed='https://raw.githubusercontent.com/RamonHitramon/mcap-call-report-2026-10-25/refs/heads/paper-feed/live-paper.json';
 const $=id=>document.getElementById(id);
 const sol=v=>Number(v).toFixed(6)+' SOL';

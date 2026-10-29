@@ -9,7 +9,7 @@ export function mergeTradeCounts(snapshot,sidecar){
 export function createTradeCountsLoader(fetcher=(...args)=>fetch(...args)){
  let promise;
  return async snapshot=>{
-  promise??=Promise.resolve().then(()=>fetcher('./trade-counts.json?v=chart4v1')).then(r=>r.ok?r.json():null).catch(()=>null);
+  promise??=Promise.resolve().then(()=>fetcher('./trade-counts.json?v=compact4v1')).then(r=>r.ok?r.json():null).catch(()=>null);
   return mergeTradeCounts(snapshot,await promise);
  };
 }

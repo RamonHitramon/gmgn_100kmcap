@@ -8,7 +8,7 @@ test('archived chart legends, cash labels and inspection remain historical',asyn
   updateCharts({run_id:'x',wallets:[{id:'tp100',disabled:true,cash_sol:.8}],config:{disabled_strategies:{tp100:{disabled_at:150}}},performance_history:{run_id:'x',started_at:100,asof:300,series:[{id:'tp100',name:'TP 2×',disabled_at:150,points:[[100,0,0,1,false],[150,.1,0,.8,false]],realized:[[100,0],[150,.01]]}]}});
   const text=n=>[n.textContent||'',...n.children.map(text)].join(' ');
   assert.match(text(root.children[1]),/TP 2× · архив/);
-  const cash=root.children[2].children[1];assert.match(text(cash),/TP 2× · архив/);assert.doesNotMatch(text(cash),/Free SOL сейчас/);
+  const cash=root.children[3];assert.match(text(cash),/TP 2× · архив/);assert.doesNotMatch(text(cash),/Free SOL сейчас/);
   for(const card of root.children[2].children){const plot=card.children.at(-1);plot.onkeydown({key:'ArrowLeft',preventDefault(){}});assert.doesNotMatch(text(plot.children[1]),/TP 2×:/);assert.match(text(plot.children[1]),/архив|заморож/);}
  }finally{globalThis.document=previous}
 });
@@ -17,6 +17,6 @@ test('HTML exposes dynamic active counts without asserting five current strategi
  assert.match(html,/id="active-strategies"/);assert.match(html,/id="active-rules"/);assert.doesNotMatch(html,/Пять независимых стратегий/);
  for(const file of ['paper.mjs','paper-charts.mjs','paper-chart-model.mjs','paper-table-model.mjs']){
   const sources=html+await readFile(new URL('./paper.mjs',import.meta.url),'utf8')+await readFile(new URL('./paper-charts.mjs',import.meta.url),'utf8');
-  assert.ok(sources.includes(file+'?v='+(file==='paper.mjs'?'chart4v1':'chart4v1')));
+  assert.ok(sources.includes(file+'?v='+(file==='paper.mjs'?'compact4v1':'compact4v1')));
  }
 });
