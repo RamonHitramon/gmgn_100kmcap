@@ -88,6 +88,10 @@ test('frontend renders safe rows, snapshot marks, empty tbody and preserves filt
   assert.match(frozen.children[7].title,/00:02:20 UTC/);
   const closed=ids.positions.children.find(r=>r!==frozen);assert.equal(closed.children[7].children[0].textContent,'+0.020 SOL');
   assert.doesNotMatch(text(closed.children[7]),/frozen|≈/);
+  snapshot.run_status='stopped';snapshot.stopped_at=200;
+  await ids.refresh.events.click();
+  assert.match(ids.status.textContent,/Эксперимент завершён/);
+  assert.doesNotMatch(ids.status.textContent,/Демо работает|Снимок устарел/);
  } finally {Object.assign(globalThis,globals);}
 });
 test('frozen open HOLD stops at freeze only for strict disabled flag, fails neutral without freeze',()=>{

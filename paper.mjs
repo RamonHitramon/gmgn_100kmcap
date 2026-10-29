@@ -9,7 +9,7 @@ const field=(list,key,value)=>{const line=el('div');line.append(el('dt',key),el(
 let state=null,busy=false;
 function render(){
  const s=state,age=Date.now()/1000-s.updated_at,stale=age>300;
- $('status').textContent=(stale?'⚠ Снимок устарел. ':'● Демо работает · ')+at(s.updated_at)+(s.run_id?' · '+s.run_id:'')+' · новых коллов: '+s.signals;
+ $('status').textContent=(s.run_status==='stopped'?'■ Эксперимент завершён · ':stale?'⚠ Снимок устарел. ':'● Демо работает · ')+at(s.stopped_at||s.updated_at)+(s.run_id?' · '+s.run_id:'')+' · коллов: '+s.signals;
  $('status').className=stale?'warning':'muted';$('wallets').replaceChildren();
  const active=s.wallets.filter(w=>!w.disabled).length;
  $('active-strategies').textContent=`Активных стратегий: ${active}. Новые коллы → реальные котировки Jupiter → виртуальные сделки; без подбора по будущему максимуму.`;

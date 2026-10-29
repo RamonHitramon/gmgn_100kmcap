@@ -17,6 +17,6 @@ test('HTML exposes dynamic active counts without asserting five current strategi
  assert.match(html,/id="active-strategies"/);assert.match(html,/id="active-rules"/);assert.doesNotMatch(html,/Пять независимых стратегий/);
  for(const file of ['paper.mjs','paper-charts.mjs','paper-chart-model.mjs','paper-table-model.mjs']){
   const sources=html+await readFile(new URL('./paper.mjs',import.meta.url),'utf8')+await readFile(new URL('./paper-charts.mjs',import.meta.url),'utf8');
-  assert.ok(sources.includes(file+'?v=freeze1'));
+  assert.ok(sources.includes(file+'?v='+(file==='paper.mjs'?'stopped1':'freeze1')));
  }
 });
