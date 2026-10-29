@@ -5,4 +5,12 @@ test('five-strategy comparison uses real timestamps, common zero and selectable 
 test('realized mode uses exact exit series and step paths, not floating PnL',()=>{const m=plotModel(history,'realized','SOL',null,0);assert.equal(m.series[0].data.at(-1).v,.15);const p=pathFor(m.series[0].data,t=>(t-100)/10,v=>v,true,[]);assert(p.includes('H20.00'));assert(p.includes('V0.15'))});
 test('cash mode ignores open token marks and shows free SOL minus initial balance',()=>{const h={...history,series:[{...history.series[0],points:[[100,0,0,1,false],[200,99,0,.9,true],[1100,100,.15,.7,false]]}]};const m=plotModel(h,'cash','SOL');assert.deepEqual(m.series[0].data.map(p=>Number(p.v.toFixed(6))),[0,-.1,-.3]);assert.equal(m.series[0].data.at(-1).cash,.7);assert.equal(m.series[0].data[1].stale,false);assert.equal(Number(plotModel(h,'cash','%').series[0].data.at(-1).v.toFixed(6)),-30);const path=pathFor(m.series[0].data,t=>t,v=>v,true);assert(path.includes('H'));});
 test('cash mode never invents balances when historical snapshots are missing cash',()=>{const h={...history,series:[{id:'tp30',points:[[100,0,0,1,false],[200,5,0,null,false],[300,5,0,undefined,false],[400,5,0,.8,false]],gaps:[]}]};assert.deepEqual(plotModel(h,'cash').series[0].data.map(p=>p.t),[100,400]);});
+test('archived series preserve history but never continue beyond freeze in any mode',()=>{
+ const h={...history,series:[{...history.series[0],disabled_at:300}]};
+ for(const mode of ['equity','cash','realized']){
+  const s=plotModel(h,mode).series[0];assert.equal(s.disabled_at,300);assert.match(s.name,/архив/);
+  assert.ok(s.data.length>0);assert.ok(s.data.every(p=>p.t<=300));
+ }
+ assert.equal(plotModel(history).series[0].name,'TP20');
+});
 test('equity paths preserve nonuniform time spacing and break across missing observations',()=>{const data=plotModel(history).series[0].data;const p=pathFor(data,t=>(t-100)/10,v=>v,false,[]);assert(p.includes('L10.00'));assert(p.includes('L100.00'));assert.equal((pathFor(data,t=>t,v=>v,false,[[200,1100]]).match(/M/g)||[]).length,2)});

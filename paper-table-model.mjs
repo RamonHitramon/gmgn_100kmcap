@@ -50,7 +50,7 @@ export function countModel(s,shown) {
  return {shown,loaded,total,truncated:total>loaded};
 }
 export function holdModel(p, asof) {
- const end = p.closed == null ? asof : p.closed;
+ const end = p.closed == null ? (p.strategy_disabled === true ? p.frozen_at : asof) : p.closed;
  const seconds = timestamp(p.opened) && timestamp(end) && end >= p.opened ? end-p.opened : null;
  return {seconds, tone:seconds === null?'muted':seconds<30?'neg':seconds<=60?'warning':'pos'};
 }

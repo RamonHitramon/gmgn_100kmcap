@@ -49,13 +49,13 @@ test('frontend has semantic scroll table, new feed/cache path, safe text and all
  const js=await readFile(new URL('./paper.mjs',import.meta.url),'utf8');
  assert.match(html,/<table[ >]/); assert.match(html,/<tbody id="positions"/); assert.match(html,/scope="col"/);
  assert.match(html,/id="status-filter"/); assert.match(html,/id="sort"/); assert.match(html,/overflow:auto/);
- assert.match(html,/paper.mjs\?v=cash1/); assert.match(js,/refs\/heads\/paper-feed\/live-paper.json/);
- assert.doesNotMatch(js,/innerHTML/); assert.match(js,/paper-table-model.mjs\?v=table1/);
+ assert.match(html,/paper.mjs\?v=[\w.-]+/); assert.match(js,/refs\/heads\/paper-feed\/live-paper.json/);
+ assert.doesNotMatch(js,/innerHTML/); assert.match(js,/paper-table-model.mjs\?v=[\w.-]+/);
 });
 test('frontend renders safe rows, snapshot marks, empty tbody and preserves filters on refresh',async()=>{
  class Node { constructor(tag='div'){this.tag=tag;this.children=[];this.value='all';this.events={};this.style={};} append(...v){this.children.push(...v);} replaceChildren(...v){this.children=v;} addEventListener(k,fn){this.events[k]=fn;} setAttribute(k,v){this[k]=v;} }
- const ids=Object.fromEntries(['status','wallets','filter','status-filter','sort','positions','health','download','refresh','error','trade-count','trade-asof'].map(id=>[id,new Node()]));
- ids.sort.value='latest';
+ const ids=Object.fromEntries(['status','wallets','filter','status-filter','sort','positions','health','download','refresh','error','trade-count','trade-asof','active-strategies','active-rules'].map(id=>[id,new Node()]));
+ ids.sort.value='latest'; const option=new Node('option');option.value='tp100';option.textContent='TP 2×';ids.filter.children.push(option);ids.filter.options=ids.filter.children;
  const globals={document:globalThis.document,fetch:globalThis.fetch,setInterval:globalThis.setInterval};
  const snapshot={mode:'PAPER_ONLY',updated_at:200,started_at:100,signals:1,wallets:Array.from({length:5},(_,i)=>({id:'tp'+i,name:'Wallet '+i,net_sol:0,equity_sol:1,cash_sol:1,realised_sol:0,open:1,closed:0})),positions:[{symbol:'<img onerror=bad>',strategy:'tp0',address:'So11111111111111111111111111111111111111112',opened:100,last_seen:100,last_mark:.2,cost:.1,signal_at:null,entry_delay_seconds:null}]};
  try {
@@ -70,7 +70,34 @@ test('frontend renders safe rows, snapshot marks, empty tbody and preserves filt
   assert.equal(ids.positions.children[0].children[0].colSpan,9);
   await ids.refresh.events.click();
   assert.equal(ids.filter.value,'missing'); assert.equal(ids['status-filter'].value,'closed'); assert.equal(ids.sort.value,'oldest');
+  const text=n=>[n.textContent||'',...n.children.map(text)].join(' ');
+  snapshot.wallets[0]={...snapshot.wallets[0],id:'tp100',name:'TP 2×',disabled:true,disabled_at:150};
+  snapshot.config={disabled_strategies:{tp100:{disabled_at:150,mode:'frozen'}}};
+  snapshot.positions=[{...snapshot.positions[0],strategy:'tp100',strategy_disabled:true,frozen_at:150,last_seen:140},
+   {strategy:'tp100',strategy_disabled:true,opened:100,closed:145,cost:.1,proceeds:.12}];
+  ids.filter.value='tp100';ids['status-filter'].value='all';await ids.refresh.events.click();
+  assert.match(text(ids.wallets.children[0]),/TP 2× · архив/);
+  assert.match(text(ids.wallets.children[0]),/Архив · без новых входов\/выходов; оценка заморожена/);
+  assert.match(text(ids.wallets.children[0]),/00:02:30 UTC/);
+  assert.equal(ids.wallets.children[0].children[2].className,'big muted');
+  assert.equal(ids.filter.options[0].textContent,'TP 2× · архив');
+  assert.match(ids['active-strategies'].textContent,/4/);assert.match(ids['active-rules'].textContent,/4/);
+  const frozen=ids.positions.children.find(r=>r.children[5].textContent==='FROZEN');assert.ok(frozen);
+  assert.equal(frozen.children[6].textContent,'50s');assert.match(frozen.children[1].textContent,/архив/);
+  assert.match(text(frozen.children[7]),/frozen/);assert.equal(frozen.children[7].className,'numeric muted');
+  assert.match(frozen.children[7].title,/00:02:20 UTC/);
+  const closed=ids.positions.children.find(r=>r!==frozen);assert.equal(closed.children[7].children[0].textContent,'+0.020 SOL');
+  assert.doesNotMatch(text(closed.children[7]),/frozen|≈/);
  } finally {Object.assign(globalThis,globals);}
+});
+test('frozen open HOLD stops at freeze only for strict disabled flag, fails neutral without freeze',()=>{
+ for(const [freeze,tone] of [[129.9,'neg'],[130,'warning'],[160,'warning'],[160.1,'pos']]){
+  const h=model.holdModel({opened:100,strategy_disabled:true,frozen_at:freeze},999);
+  assert.ok(Math.abs(h.seconds-(freeze-100))<1e-10); assert.equal(h.tone,tone);
+ }
+ for(const frozen_at of [undefined,null,'150',90]) assert.deepEqual(model.holdModel({opened:100,strategy_disabled:true,frozen_at},999),{seconds:null,tone:'muted'});
+ for(const strategy_disabled of [undefined,false,'true']) assert.equal(model.holdModel({opened:100,strategy_disabled,frozen_at:150},200).seconds,100);
+ assert.equal(model.holdModel({opened:100,closed:175,strategy_disabled:true,frozen_at:150},999).seconds,75);
 });
 test('hold uses snapshot time, strict boundaries and neutral invalid durations', () => {
  assert.equal(typeof model.holdModel, 'function');
